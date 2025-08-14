@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
@@ -955,6 +956,17 @@ app.get('/api/import/courses/template', authenticateToken, requirePermission('re
   res.setHeader('Content-Disposition', 'attachment; filename="courses_template.csv"');
   res.send(csvContent);
 });
+
+// Serve frontend for production
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from the React build folder
+  app.use(express.static(path.join(__dirname, '..', 'dist')));
+
+  // Handle all other routes by serving the React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  });
+}
 
 // Start server
 app.listen(PORT, () => {
