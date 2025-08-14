@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 h-10 py-2 px-4;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-100 text-secondary-900 hover:bg-secondary-200 h-10 py-2 px-4;
+  }
+  
+  .btn-outline {
+    @apply border border-gray-300 bg-white hover:bg-gray-50 hover:text-gray-900 h-10 py-2 px-4;
+  }
+  
+  .input {
+    @apply flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .card {
+    @apply rounded-lg border bg-white text-gray-900 shadow-sm;
+  }
+  
+  .timetable-cell {
+    @apply border border-gray-200 p-2 min-h-[80px] bg-white hover:bg-gray-50 transition-colors;
+  }
+  
+  .timetable-header {
+    @apply bg-gray-100 font-semibold text-gray-700 text-center py-3 px-2;
+  }
+  
+  .course-card {
+    @apply bg-blue-50 border border-blue-200 rounded p-2 text-sm cursor-pointer hover:bg-blue-100 transition-colors;
+  }
+  
+  .conflict-warning {
+    @apply bg-red-50 border border-red-200 text-red-700;
+  }
+  
+  .print-hidden {
+    @apply print:hidden;
+  }
+  
+  .print-only {
+    @apply hidden print:block;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    margin: 0;
+    padding: 20px;
+  }
+  
+  .timetable-container {
+    page-break-inside: avoid;
+  }
+}
