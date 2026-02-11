@@ -17,9 +17,12 @@ const Reports = () => {
   const { 
     courses, 
     teachers, 
-    rooms, 
-    selectedYear, 
+    rooms,
+    academicYears,
+    selectedYear,
+    setSelectedYear,
     selectedTrimester,
+    setSelectedTrimester,
     getFilteredCourses,
     conflicts 
   } = useTimetable();
@@ -34,6 +37,7 @@ const Reports = () => {
   const [includeConflicts, setIncludeConflicts] = useState(true);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const trimesters = ['1', '2', '3', 'Intensive'];
   const currentCourses = getFilteredCourses(filters);
 
   const handleExport = () => {
@@ -66,6 +70,48 @@ const Reports = () => {
         <p className="text-gray-600">
           Generate reports and export your timetable data
         </p>
+      </div>
+
+      {/* Year/Trimester Selection */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Academic Year
+            </label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="input w-32"
+            >
+              {academicYears.map(yearObj => (
+                <option key={yearObj.year} value={yearObj.year}>{yearObj.year}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Trimester
+            </label>
+            <select
+              value={selectedTrimester}
+              onChange={(e) => setSelectedTrimester(e.target.value)}
+              className="input w-32"
+            >
+              {trimesters.map(trimester => (
+                <option key={trimester} value={trimester}>Trimester {trimester}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-end">
+            <div className="text-sm text-gray-600">
+              <Calendar className="h-4 w-4 inline mr-1" />
+              Reporting on: {selectedYear} - Trimester {selectedTrimester}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Export Options */}

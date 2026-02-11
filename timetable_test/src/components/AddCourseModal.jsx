@@ -3,7 +3,7 @@ import { useTimetable } from '../contexts/TimetableContext';
 import { X, BookOpen, User, MapPin, Clock, Calendar } from 'lucide-react';
 
 const AddCourseModal = ({ isOpen, onClose }) => {
-  const { addCourse, teachers, rooms, selectedYear, selectedTrimester } = useTimetable();
+  const { addCourse, teachers, rooms, academicYears, selectedYear, selectedTrimester } = useTimetable();
   const [formData, setFormData] = useState({
     name: '',
     teacherId: '',
@@ -21,7 +21,6 @@ const AddCourseModal = ({ isOpen, onClose }) => {
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'
   ];
-  const years = ['2025', '2026', '2027'];
   const trimesters = ['1', '2', '3', 'Intensive'];
 
   const handleChange = (e) => {
@@ -246,8 +245,8 @@ const AddCourseModal = ({ isOpen, onClose }) => {
                     className={`mt-1 input ${errors.year ? 'border-red-500' : ''}`}
                   >
                     <option value="">Select year</option>
-                    {years.map(year => (
-                      <option key={year} value={year}>{year}</option>
+                    {academicYears.map(yearObj => (
+                      <option key={yearObj.year} value={yearObj.year}>{yearObj.year}</option>
                     ))}
                   </select>
                   {errors.year && (

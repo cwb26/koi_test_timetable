@@ -70,6 +70,22 @@ db.serialize(() => {
     )
   `);
 
+  // Academic Years table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS academic_years (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      year INTEGER UNIQUE NOT NULL,
+      is_active INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Insert default year (2026)
+  db.run(`
+    INSERT OR IGNORE INTO academic_years (year, is_active) 
+    VALUES (2026, 1)
+  `);
+
   // Create indexes for better performance
   db.run('CREATE INDEX IF NOT EXISTS idx_courses_day_time ON courses(day, start_time, end_time)');
   db.run('CREATE INDEX IF NOT EXISTS idx_courses_teacher ON courses(teacher_id)');

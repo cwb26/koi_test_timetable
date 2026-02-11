@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTimetable } from '../contexts/TimetableContext';
+import YearManagement from './YearManagement';
 import { 
   Calendar, 
   BookOpen, 
@@ -226,6 +227,9 @@ const Dashboard = () => {
             )}
           </div>
         </div>
+
+        {/* Year Management (Admin Only) */}
+        <YearManagement />
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ const TimetableView = () => {
     setSelectedYear, 
     selectedTrimester, 
     setSelectedTrimester,
+    academicYears,
     getFilteredCourses,
     conflicts
   } = useTimetable();
@@ -30,7 +31,6 @@ const TimetableView = () => {
     day: ''
   });
 
-  const years = ['2025', '2026', '2027'];
   const trimesters = ['1', '2', '3', 'Intensive'];
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const timeSlots = [
@@ -100,9 +100,13 @@ const TimetableView = () => {
               onChange={(e) => setSelectedYear(e.target.value)}
               className="input w-32"
             >
-              {years.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
+              {academicYears.length === 0 ? (
+                <option value="">No years</option>
+              ) : (
+                academicYears.map(yearObj => (
+                  <option key={yearObj.year} value={yearObj.year}>{yearObj.year}</option>
+                ))
+              )}
             </select>
           </div>
           

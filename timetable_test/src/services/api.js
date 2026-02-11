@@ -178,6 +178,99 @@ export const statsAPI = {
   }
 };
 
+// Academic Years API
+export const academicYearsAPI = {
+  getAll: async () => {
+    console.log('Fetching academic years...');
+    const response = await fetch(`${API_BASE_URL}/academic-years`, {
+      headers: getAuthHeaders()
+    });
+    const data = await handleResponse(response);
+    console.log('Academic years received:', data);
+    return data;
+  },
+
+  create: async (year) => {
+    const response = await fetch(`${API_BASE_URL}/academic-years`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ year: parseInt(year) })
+    });
+    return handleResponse(response);
+  },
+
+  delete: async (year) => {
+    const response = await fetch(`${API_BASE_URL}/academic-years/${year}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+  }
+};
+
+// Import/Export API
+export const importAPI = {
+  importTeachers: async (file) => {
+    const formData = new FormData();
+    formData.append('csvFile', file);
+    
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/import/teachers`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      body: formData
+    });
+    return handleResponse(response);
+  },
+
+  importCourses: async (file) => {
+    const formData = new FormData();
+    formData.append('csvFile', file);
+    
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/import/courses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      body: formData
+    });
+    return handleResponse(response);
+  },
+
+  getTeachersTemplate: async () => {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/import/teachers/template`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to download template');
+    }
+    
+    return response.blob();
+  },
+
+  getCoursesTemplate: async () => {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/import/courses/template`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to download template');
+    }
+    
+    return response.blob();
+  }
+};
+
 // Error handling utility
 export const handleAPIError = (error) => {
   console.error('API Error:', error);

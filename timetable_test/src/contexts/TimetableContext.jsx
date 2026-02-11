@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { coursesAPI, teachersAPI, roomsAPI, conflictsAPI, statsAPI, handleAPIError } from '../services/api';
+import { coursesAPI, teachersAPI, roomsAPI, conflictsAPI, statsAPI, academicYearsAPI, handleAPIError } from '../services/api';
 import toast from 'react-hot-toast';
 
 const TimetableContext = createContext();
@@ -16,24 +16,47 @@ export const TimetableProvider = ({ children }) => {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [selectedYear, setSelectedYear] = useState('2025');
-  const [selectedTrimester, setSelectedTrimester] = useState('2');
+  const [academicYears, setAcademicYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [selectedTrimester, setSelectedTrimester] = useState('1');
   const [conflicts, setConflicts] = useState([]);
 
-  // Load data from API on mount
+  // Load data from API on mount (only if authenticated)
   useEffect(() => {
     const loadData = async () => {
+      // Check if user is authenticated
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        return; // Don't load data if not authenticated
+      }
+
       try {
-        const [teachersData, roomsData] = await Promise.all([
+        const [teachersData, roomsData, yearsData] = await Promise.all([
           teachersAPI.getAll(),
-          roomsAPI.getAll()
+          roomsAPI.getAll(),
+          academicYearsAPI.getAll()
         ]);
         
         setTeachers(teachersData);
         setRooms(roomsData);
+        setAcademicYears(yearsData);
+        
+        // Set default year to first available year if exists
+        if (yearsData.length > 0) {
+          const firstYear = yearsData[0].year.toString();
+          setSelectedYear(firstYear);
+          console.log('Academic years loaded:', yearsData);
+          console.log('Selected year set to:', firstYear);
+        } else {
+          console.warn('No academic years found in database!');
+        }
       } catch (error) {
         const errorMessage = handleAPIError(error);
-        toast.error(`Failed to load data: ${errorMessage}`);
+        console.error('Error loading data:', error);
+        // Only show error if it's not an auth error (auth errors are handled by handleAPIError)
+        if (!error.message.includes('401') && !error.message.includes('403')) {
+          toast.error(`Failed to load data: ${errorMessage}`);
+        }
       }
     };
 
@@ -42,22 +65,46 @@ export const TimetableProvider = ({ children }) => {
 
 
 
+  // Transform backend data (snake_case) to frontend format (camelCase)
+  const transformCourse = (course) => ({
+    ...course,
+    teacherId: course.teacher_id,
+    roomId: course.room_id,
+    startTime: course.start_time,
+    endTime: course.end_time,
+    teacherName: course.teacher_name,
+    roomName: course.room_name,
+    roomBuilding: course.room_building
+  });
+
   // Load courses and check for conflicts when year/trimester changes
   useEffect(() => {
     const loadCourses = async () => {
+      // Check if user is authenticated
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        return; // Don't load courses if not authenticated
+      }
+
       try {
         const coursesData = await coursesAPI.getAll({
           year: selectedYear,
           trimester: selectedTrimester
         });
-        setCourses(coursesData);
+        
+        // Transform courses to camelCase
+        const transformedCourses = coursesData.map(transformCourse);
+        setCourses(transformedCourses);
         
         // Get conflicts from API
         const conflictsData = await conflictsAPI.getConflicts(selectedYear, selectedTrimester);
         setConflicts(conflictsData);
       } catch (error) {
         const errorMessage = handleAPIError(error);
-        toast.error(`Failed to load courses: ${errorMessage}`);
+        // Only show error if it's not an auth error
+        if (!error.message.includes('401') && !error.message.includes('403')) {
+          toast.error(`Failed to load courses: ${errorMessage}`);
+        }
       }
     };
 
@@ -118,7 +165,8 @@ export const TimetableProvider = ({ children }) => {
       };
       
       const newCourse = await coursesAPI.create(courseWithYearTrimester);
-      setCourses(prev => [...prev, newCourse]);
+      const transformedCourse = transformCourse(newCourse);
+      setCourses(prev => [...prev, transformedCourse]);
       toast.success('Course added successfully');
     } catch (error) {
       const errorMessage = handleAPIError(error);
@@ -129,8 +177,9 @@ export const TimetableProvider = ({ children }) => {
   const updateCourse = async (id, updates) => {
     try {
       const updatedCourse = await coursesAPI.update(id, updates);
+      const transformedCourse = transformCourse(updatedCourse);
       setCourses(prev => prev.map(course => 
-        course.id === id ? updatedCourse : course
+        course.id === id ? transformedCourse : course
       ));
       toast.success('Course updated successfully');
     } catch (error) {
@@ -240,11 +289,38 @@ export const TimetableProvider = ({ children }) => {
     return filtered;
   };
 
+  const addAcademicYear = async (year) => {
+    try {
+      const newYear = await academicYearsAPI.create(year);
+      setAcademicYears(prev => [newYear, ...prev].sort((a, b) => b.year - a.year));
+      toast.success(`Year ${year} added successfully`);
+      return true;
+    } catch (error) {
+      const errorMessage = handleAPIError(error);
+      toast.error(`Failed to add year: ${errorMessage}`);
+      return false;
+    }
+  };
+
+  const deleteAcademicYear = async (year) => {
+    try {
+      await academicYearsAPI.delete(year);
+      setAcademicYears(prev => prev.filter(y => y.year !== parseInt(year)));
+      toast.success(`Year ${year} deleted successfully`);
+      return true;
+    } catch (error) {
+      const errorMessage = handleAPIError(error);
+      toast.error(`Failed to delete year: ${errorMessage}`);
+      return false;
+    }
+  };
+
   const value = {
     // State
     courses,
     teachers,
     rooms,
+    academicYears,
     selectedYear,
     selectedTrimester,
     conflicts,
@@ -263,6 +339,8 @@ export const TimetableProvider = ({ children }) => {
     addRoom,
     updateRoom,
     deleteRoom,
+    addAcademicYear,
+    deleteAcademicYear,
     getFilteredCourses,
     
     // Utilities

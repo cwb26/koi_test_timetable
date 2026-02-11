@@ -5,7 +5,6 @@ const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const path = require('path');
 const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
@@ -134,6 +133,70 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
       username: req.user.username,
       role: req.user.role
     }
+  });
+});
+
+// Academic Years routes
+app.get('/api/academic-years', authenticateToken, requirePermission('read'), (req, res) => {
+  db.all('SELECT * FROM academic_years ORDER BY year DESC', (err, years) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(years);
+  });
+});
+
+app.post('/api/academic-years', authenticateToken, requirePermission('admin'), [
+  body('year').isInt({ min: 2000, max: 2100 }).withMessage('Valid year is required')
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { year } = req.body;
+
+  db.run('INSERT INTO academic_years (year, is_active) VALUES (?, 0)', [year], function(err) {
+    if (err) {
+      if (err.message.includes('UNIQUE')) {
+        return res.status(400).json({ error: 'Year already exists' });
+      }
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    db.get('SELECT * FROM academic_years WHERE id = ?', [this.lastID], (err, year) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.status(201).json(year);
+    });
+  });
+});
+
+app.delete('/api/academic-years/:year', authenticateToken, requirePermission('admin'), (req, res) => {
+  const { year } = req.params;
+
+  // Check if year has courses
+  db.get('SELECT COUNT(*) as count FROM courses WHERE year = ?', [year], (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (result.count > 0) {
+      return res.status(400).json({ error: 'Cannot delete year with existing courses' });
+    }
+
+    db.run('DELETE FROM academic_years WHERE year = ?', [year], function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Year not found' });
+      }
+
+      res.json({ message: 'Year deleted successfully' });
+    });
   });
 });
 
